@@ -1,4 +1,4 @@
-"""Command-line entry point for MeasurePilot M0 and M1."""
+"""Command-line entry point for MeasurePilot M0 through M2."""
 
 from __future__ import annotations
 
@@ -10,6 +10,8 @@ from typing import Sequence
 
 from . import __version__
 from .calibration import generate_calibration_pdf
+from .corrections import correct_detection_file
+from .detection import detect_image_file
 from .errors import MeasurePilotError
 from .model import MeasurePilotProject
 from .project import load_project, save_project
@@ -55,6 +57,26 @@ def _build_parser() -> argparse.ArgumentParser:
     rectify_parser.add_argument("output", type=Path)
     rectify_parser.add_argument("--report", type=Path)
     rectify_parser.add_argument("--px-per-mm", type=float, default=4.0)
+
+    analysis_parser = commands.add_parser(
+        "analysis", help="detect and explicitly correct planar part geometry"
+    )
+    analysis_commands = analysis_parser.add_subparsers(dest="analysis_command", required=True)
+
+    detect_parser = analysis_commands.add_parser(
+        "detect", help="detect a supported planar part in a rectified metric image"
+    )
+    detect_parser.add_argument("input", type=Path)
+    detect_parser.add_argument("output", type=Path)
+    detect_parser.add_argument("--px-per-mm", type=float, required=True)
+    detect_parser.add_argument("--overlay", type=Path)
+
+    correct_parser = analysis_commands.add_parser(
+        "correct", help="apply an explicit correction JSON to an immutable detection"
+    )
+    correct_parser.add_argument("detection", type=Path)
+    correct_parser.add_argument("corrections", type=Path)
+    correct_parser.add_argument("output", type=Path)
 
     return parser
 
@@ -107,6 +129,23 @@ def main(argv: Sequence[str] | None = None) -> int:
                 output_px_per_mm=arguments.px_per_mm,
             )
             print(json.dumps(report.to_dict(), ensure_ascii=False, sort_keys=True))
+            return 0
+
+        if arguments.command == "analysis" and arguments.analysis_command == "detect":
+            _output, _overlay, result = detect_image_file(
+                arguments.input,
+                arguments.output,
+                px_per_mm=arguments.px_per_mm,
+                overlay_destination=arguments.overlay,
+            )
+            print(json.dumps(result.to_dict(), ensure_ascii=False, sort_keys=True))
+            return 0
+
+        if arguments.command == "analysis" and arguments.analysis_command == "correct":
+            _output, result = correct_detection_file(
+                arguments.detection, arguments.corrections, arguments.output
+            )
+            print(json.dumps(result.to_dict(), ensure_ascii=False, sort_keys=True))
             return 0
     except MeasurePilotError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

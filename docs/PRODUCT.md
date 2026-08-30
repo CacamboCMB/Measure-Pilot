@@ -28,6 +28,24 @@ Warnings preserve potentially usable captures with low sharpness or low metric
 resolution. Missing markers, duplicate IDs, impossible geometry, and excessive
 reprojection error are hard failures because no defensible metric output exists.
 
+
+## Current M2 slice
+
+M2 turns the trustworthy rectified image into a corrigible geometric proposal:
+
+1. Restrict processing to the inner versioned work area.
+2. Select one sufficiently large, high-contrast connected part.
+3. Reject boundary-clipped or ambiguous captures.
+4. Simplify the external contour in millimetres.
+5. Classify circular internal contours as holes and retain other supported
+   internal contours as polygonal cut-outs.
+6. Bind the result to the source image and record uncertainty.
+7. Apply explicit correction documents as immutable revisions.
+
+This remains intentionally deterministic and classical. Machine learning is not
+required for the supported high-contrast plate workflow, and no inferred value
+is presented as a physical measurement.
+
 ## MVP boundary
 
 Supported first:

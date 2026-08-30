@@ -7,7 +7,8 @@
 3. **Neutral project model** - versioned `.mpilot` data exchanged between components.
 
 M0 implements the neutral project model and CLI. M1 adds calibrated capture to
-the engine without introducing FreeCAD or contour-recognition dependencies.
+the engine. M2 adds deterministic, corrigible 2D detection without introducing
+FreeCAD, constraint solving, or machine-learning dependencies.
 
 ## `.mpilot` version 1
 
@@ -66,6 +67,34 @@ The output report records:
 The PNG and JSON report are written atomically. No contour or CAD information is
 inferred in M1.
 
+
+## M2 detection model
+
+M2 consumes an already rectified A4 image with an explicit px/mm value. The
+engine crops to the inner versioned work area, thresholds the high-contrast
+foreground, removes implausibly small calibration-line components, and selects
+one unambiguous connected part. A part touching the work-area boundary is
+rejected because its contour may be clipped.
+
+The selected component is represented as:
+
+- one canonical polygonal outer profile;
+- circular child contours above an explicit circularity threshold;
+- remaining supported child contours as polygonal cut-outs;
+- a source-image SHA-256 binding;
+- pixel-derived boundary uncertainty in millimetres;
+- status and immutable provenance history.
+
+Polygon orientation, start vertex, feature IDs, and feature ordering are
+canonicalised before deterministic JSON serialization. Optional overlays are
+rendered from the same millimetre model.
+
+Corrections are separate version-1 JSON documents. They may replace the profile,
+add or update circles, remove detected features, and attach a note. Applying a
+correction returns a new detection result, preserves the source result, and
+records the canonical correction-payload hash. No constraint or CAD semantics
+are inferred in M2.
+
 ## Invariants
 
 - Internal length unit: `mm`.
@@ -74,3 +103,5 @@ inferred in M1.
 - Same validated project model produces the same archive bytes.
 - Same calibration layout produces byte-identical PDF output.
 - No metric result is emitted after a hard calibration failure.
+- No geometry result is emitted for a missing, clipped, or ambiguous M2 part.
+- Automatic geometry is never relabelled as measured without an explicit correction.

@@ -6,9 +6,10 @@ calibrated photographs and a small number of trustworthy measurements into an
 editable parametric CAD model while keeping measured, estimated, derived, and
 unresolved values distinct.
 
-The repository is currently at **M1**. It provides a deterministic project
-foundation plus calibrated A4 capture and metric perspective rectification. It
-does not yet extract part contours or generate CAD geometry.
+The repository is currently at **M2**. It provides a deterministic project
+foundation, calibrated A4 capture, metric perspective rectification, and
+corrigible recognition of supported planar part profiles and internal features.
+It does not yet solve dimensional constraints or generate CAD geometry.
 
 ## Current capabilities
 
@@ -19,6 +20,9 @@ does not yet extract part contours or generate CAD geometry.
 - perspective rectification to a requested pixel-per-millimetre resolution;
 - machine-readable quality reports with sharpness, metric resolution,
   homography, reprojection error, and warnings;
+- deterministic high-contrast part segmentation inside the versioned work area;
+- millimetre-based polygon profiles, circular holes, and polygonal cut-outs;
+- immutable source-bound detections with explicit uncertainty and correction history;
 - fully local command-line operation.
 
 ## Install for development
@@ -61,9 +65,30 @@ The command fails rather than producing guessed output when required markers
 are missing, duplicated, degenerate, or inconsistent with the versioned layout.
 Low sharpness or low image resolution is retained as a warning in the report.
 
+
+## Analysis CLI
+
+Detect one supported high-contrast planar part in an already rectified image:
+
+```bash
+measurepilot analysis detect rectified.png detection.json \
+  --px-per-mm 4 --overlay detection-overlay.png
+```
+
+Apply a deterministic correction document without modifying the original detection:
+
+```bash
+measurepilot analysis correct detection.json corrections.json corrected.json
+```
+
+M2 rejects missing, clipped, implausibly small, or ambiguous parts rather than
+emitting guessed geometry. Automatic values remain `estimated`; explicit
+corrections become `user_corrected` or `measured` and append provenance history.
+
 ## Project direction
 
 The first product slice is intentionally limited to planar or mostly planar
-parts with uniform thickness. The next milestone adds corrigible contour and
-feature recognition. Measurement recommendation and native FreeCAD model
-generation follow only after calibrated capture is reliable.
+parts with uniform thickness and visible high contrast against the calibration
+sheet. The next milestone adds a parameter and constraint engine. Measurement
+recommendation and native FreeCAD model generation follow only after geometry
+and uncertainty remain stable under correction.

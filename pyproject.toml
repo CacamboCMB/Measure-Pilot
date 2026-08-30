@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "measurepilot"
-version = "0.2.0"
+version = "0.3.0"
 description = "Measurement-guided reverse engineering for parametric CAD"
 readme = "README.md"
 requires-python = ">=3.11"
