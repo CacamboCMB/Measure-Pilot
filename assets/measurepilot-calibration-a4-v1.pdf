@@ -1,0 +1,42 @@
+%PDF-1.4
+%MeasurePilot
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.2756 841.8898] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 623 >>
+stream
+q 68 0 0 68 43 731 cm BI /W 6 /H 6 /BPC 1 /CS /DeviceGray /F /AHx ID 005828181000> EI Q
+q 68 0 0 68 485 731 cm BI /W 6 /H 6 /BPC 1 /CS /DeviceGray /F /AHx ID 000078485000> EI Q
+q 68 0 0 68 485 43 cm BI /W 6 /H 6 /BPC 1 /CS /DeviceGray /F /AHx ID 001818106800> EI Q
+q 68 0 0 68 43 43 cm BI /W 6 /H 6 /BPC 1 /CS /DeviceGray /F /AHx ID 004848203000> EI Q
+0 0 0 RG 1 w 156 421 m 439.465 421 l S
+156 410 m 156 432 l S
+439.465 410 m 439.465 432 l S
+BT /F1 18 Tf 170 650 Td (MeasurePilot Calibration A4 v1) Tj ET
+BT /F1 10 Tf 181 630 Td (Print at 100 percent scale) Tj ET
+BT /F1 10 Tf 210 440 Td (100 mm verification ruler) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000023 00000 n 
+0000000072 00000 n 
+0000000129 00000 n 
+0000000265 00000 n 
+0000000938 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1008
+%%EOF
