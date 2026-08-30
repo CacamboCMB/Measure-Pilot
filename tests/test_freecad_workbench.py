@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
-import runpy
 import sys
 import types
 import xml.etree.ElementTree as ET
@@ -11,6 +10,13 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+
+def _exec_without_file(path: Path) -> dict[str, object]:
+    namespace: dict[str, object] = {"__name__": "measurepilot_freecad_loader_test"}
+    exec(compile(path.read_bytes(), str(path), "exec"), namespace, namespace)
+    assert "__file__" not in namespace
+    return namespace
 
 
 def test_package_metadata_and_required_files_are_consistent() -> None:
@@ -30,9 +36,28 @@ def test_package_metadata_and_required_files_are_consistent() -> None:
 
 def test_init_adds_only_repository_src_to_python_path(monkeypatch) -> None:
     source = str(ROOT / "src")
-    monkeypatch.setattr(sys, "path", [item for item in sys.path if item != source])
-    runpy.run_path(str(ROOT / "Init.py"))
+    monkeypatch.setattr(sys, "path", [str(ROOT), *[item for item in sys.path if item not in {str(ROOT), source}]])
+    _exec_without_file(ROOT / "Init.py")
     assert sys.path[0] == source
+
+
+def test_init_prefers_versioned_freecad_user_data_without_file(monkeypatch, tmp_path) -> None:
+    user_data = tmp_path / "FreeCAD" / "v1-1"
+    workbench_root = user_data / "Mod" / "MeasurePilot"
+    (workbench_root / "src" / "measurepilot").mkdir(parents=True)
+    (workbench_root / "freecad_workbench").mkdir()
+    (workbench_root / "vendor").mkdir()
+
+    fake_app = types.ModuleType("FreeCAD")
+    fake_app.getUserAppDataDir = lambda: str(user_data)
+    fake_app.getResourceDir = lambda: str(tmp_path / "resource")
+    monkeypatch.setitem(sys.modules, "FreeCAD", fake_app)
+    monkeypatch.setattr(sys, "path", [item for item in sys.path if item != str(ROOT)])
+
+    namespace = _exec_without_file(ROOT / "Init.py")
+    assert namespace["_ROOT"] == workbench_root.resolve()
+    assert sys.path[0] == str(workbench_root / "src")
+    assert sys.path[1] == str(workbench_root / "vendor")
 
 
 def test_command_module_import_is_lazy_without_freecad_or_pyside(monkeypatch) -> None:
@@ -48,7 +73,7 @@ def test_command_module_import_is_lazy_without_freecad_or_pyside(monkeypatch) ->
     assert "PySide" not in sys.modules
 
 
-def test_initgui_registers_workbench_and_initialize_registers_one_command(monkeypatch) -> None:
+def test_initgui_registers_workbench_without_file_and_initialize_registers_one_command(monkeypatch) -> None:
     registered_workbenches: list[type] = []
     registered_commands: dict[str, object] = {}
 
@@ -71,7 +96,7 @@ def test_initgui_registers_workbench_and_initialize_registers_one_command(monkey
 
     commands_name = "freecad_workbench.commands"
     monkeypatch.delitem(sys.modules, commands_name, raising=False)
-    init_globals = runpy.run_path(str(ROOT / "InitGui.py"))
+    init_globals = _exec_without_file(ROOT / "InitGui.py")
     assert registered_workbenches == [init_globals["MeasurePilotWorkbench"]]
 
     workbench = registered_workbenches[0]()
