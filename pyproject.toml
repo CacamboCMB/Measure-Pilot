@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "measurepilot"
-version = "0.1.0"
+version = "0.2.0"
 description = "Measurement-guided reverse engineering for parametric CAD"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -20,7 +20,11 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering",
 ]
-dependencies = []
+dependencies = [
+  "numpy>=2.0",
+  "opencv-contrib-python-headless>=4.10",
+  "reportlab>=4.2",
+]
 
 [project.optional-dependencies]
 dev = [

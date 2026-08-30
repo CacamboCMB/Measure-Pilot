@@ -13,6 +13,21 @@ The primary user interface will be a FreeCAD workbench. Image processing runs
 in a separate local engine process so that dependency updates and failures do
 not destabilise FreeCAD. The neutral project format is independent of FreeCAD.
 
+## Current M1 slice
+
+M1 establishes a trustworthy metric image before any part geometry is inferred:
+
+1. Generate the versioned A4 calibration sheet.
+2. Print it without scaling and verify the physical 100 mm ruler.
+3. Photograph the sheet with the planar part inside the work area.
+4. Detect marker IDs 0–3 and reject incomplete or contradictory captures.
+5. Rectify the photographed plane into A4 millimetre coordinates.
+6. Persist a quality report alongside the PNG.
+
+Warnings preserve potentially usable captures with low sharpness or low metric
+resolution. Missing markers, duplicate IDs, impossible geometry, and excessive
+reprojection error are hard failures because no defensible metric output exists.
+
 ## MVP boundary
 
 Supported first:
