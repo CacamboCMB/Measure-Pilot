@@ -19,6 +19,22 @@ def _exec_without_file(path: Path) -> dict[str, object]:
     return namespace
 
 
+def _exec_split_namespace_without_file(path: Path) -> dict[str, object]:
+    globals_namespace: dict[str, object] = {
+        "__builtins__": __builtins__,
+        "__name__": "measurepilot_freecad_split_loader_test",
+    }
+    locals_namespace: dict[str, object] = {}
+    exec(
+        compile(path.read_bytes(), str(path), "exec"),
+        globals_namespace,
+        locals_namespace,
+    )
+    assert "__file__" not in globals_namespace
+    assert "__file__" not in locals_namespace
+    return locals_namespace
+
+
 def test_package_metadata_and_required_files_are_consistent() -> None:
     package = ET.parse(ROOT / "package.xml").getroot()
     namespace = {"p": "https://wiki.freecad.org/Package_Metadata"}
@@ -58,6 +74,20 @@ def test_init_prefers_versioned_freecad_user_data_without_file(monkeypatch, tmp_
     assert namespace["_ROOT"] == workbench_root.resolve()
     assert sys.path[0] == str(workbench_root / "src")
     assert sys.path[1] == str(workbench_root / "vendor")
+
+
+def test_init_supports_split_loader_namespace_without_file(monkeypatch) -> None:
+    source = str(ROOT / "src")
+    monkeypatch.delitem(sys.modules, "FreeCAD", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "path",
+        [str(ROOT), *[item for item in sys.path if item not in {str(ROOT), source}]],
+    )
+
+    namespace = _exec_split_namespace_without_file(ROOT / "Init.py")
+    assert namespace["_ROOT"] == ROOT.resolve()
+    assert sys.path[0] == source
 
 
 def test_command_module_import_is_lazy_without_freecad_or_pyside(monkeypatch) -> None:
@@ -109,6 +139,28 @@ def test_initgui_registers_workbench_without_file_and_initialize_registers_one_c
         ("MeasurePilot", ["MeasurePilot_CreatePlanarModel"])
     ]
     assert workbench.GetClassName() == "Gui::PythonWorkbench"
+
+
+def test_initgui_supports_split_loader_namespace_without_file(monkeypatch) -> None:
+    registered_workbenches: list[type] = []
+
+    class Workbench:
+        pass
+
+    fake_gui = types.ModuleType("FreeCADGui")
+    fake_gui.Workbench = Workbench
+    fake_gui.addWorkbench = registered_workbenches.append
+    monkeypatch.setitem(sys.modules, "FreeCADGui", fake_gui)
+    monkeypatch.delitem(sys.modules, "FreeCAD", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "path",
+        [str(ROOT), *[item for item in sys.path if item != str(ROOT)]],
+    )
+
+    namespace = _exec_split_namespace_without_file(ROOT / "InitGui.py")
+    assert registered_workbenches == [namespace["MeasurePilotWorkbench"]]
+    assert registered_workbenches[0].Icon.endswith("resources/icons/MeasurePilot.svg")
 
 
 def test_command_reports_actionable_error_instead_of_raising(monkeypatch) -> None:
