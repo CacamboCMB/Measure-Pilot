@@ -1,38 +1,36 @@
 """FreeCAD GUI initializer for the MeasurePilot workbench."""
 
-from pathlib import Path
-import sys
 
-import FreeCADGui as Gui
+def _measurepilot_root():
+    """Locate the workbench root without relying on loader globals."""
 
+    from pathlib import Path as _Path
+    import sys as _sys
 
-def _measurepilot_root() -> Path:
-    """Locate the workbench root when FreeCAD omits ``__file__``."""
-
-    candidates: list[Path] = []
+    candidates = []
     try:
-        import FreeCAD as App
+        import FreeCAD as _App
     except Exception:
-        App = None
+        _App = None
 
-    if App is not None:
+    if _App is not None:
         for getter_name in ("getUserAppDataDir", "getResourceDir"):
             try:
-                base = Path(getattr(App, getter_name)())
+                base = _Path(getattr(_App, getter_name)())
             except (AttributeError, OSError, TypeError, ValueError):
                 continue
             candidates.append(base / "Mod" / "MeasurePilot")
 
-    for entry in tuple(sys.path):
+    for entry in tuple(_sys.path):
         if not isinstance(entry, (str, bytes)):
             continue
         try:
-            base = Path(entry)
+            base = _Path(entry)
         except (OSError, TypeError, ValueError):
             continue
         candidates.extend((base, base / "MeasurePilot"))
 
-    seen: set[str] = set()
+    seen = set()
     for candidate in candidates:
         try:
             normalized = candidate.expanduser().resolve()
@@ -53,18 +51,22 @@ def _measurepilot_root() -> Path:
 
 
 _ROOT = _measurepilot_root()
+import sys as _sys
+
 _ROOT_PATH = str(_ROOT)
-if _ROOT_PATH not in sys.path:
-    sys.path.insert(0, _ROOT_PATH)
+if _ROOT_PATH not in _sys.path:
+    _sys.path.insert(0, _ROOT_PATH)
 _ICON = str(_ROOT / "resources" / "icons" / "MeasurePilot.svg")
 
+import FreeCADGui as _Gui
 
-class MeasurePilotWorkbench(Gui.Workbench):
+
+class MeasurePilotWorkbench(_Gui.Workbench):
     """Native MeasurePilot workbench."""
 
     MenuText = "MeasurePilot"
     ToolTip = "Measurement-guided planar reverse engineering"
-    Icon = _ICON
+    Icon = ""
 
     def Initialize(self):
         """Register commands only when FreeCAD first loads the workbench."""
@@ -79,4 +81,5 @@ class MeasurePilotWorkbench(Gui.Workbench):
         return "Gui::PythonWorkbench"
 
 
-Gui.addWorkbench(MeasurePilotWorkbench)
+MeasurePilotWorkbench.Icon = _ICON
+_Gui.addWorkbench(MeasurePilotWorkbench)
